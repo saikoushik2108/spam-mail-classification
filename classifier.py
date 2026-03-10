@@ -4,28 +4,48 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score
 
-data = {
-    "message":[
-        "Win a free iPhone now",
-        "Let's meet tomorrow",
-        "Claim your free prize",
-        "Are you coming to class?",
-        "Congratulations you won money"
-    ],
-    "label":["spam","ham","spam","ham","spam"]
-}
+# Load dataset
+df = pd.read_csv("spam.csv", encoding="latin-1")
 
-df = pd.DataFrame(data)
+# Keep only required columns
+df = df[['v1', 'v2']]
+df.columns = ['label', 'message']
 
+# Convert labels to numbers
+df['label'] = df['label'].map({'ham':0, 'spam':1})
+
+# Features and labels
+X = df['message']
+y = df['label']
+
+# Convert text to numerical features
 vectorizer = CountVectorizer()
-X = vectorizer.fit_transform(df["message"])
-y = df["label"]
+X = vectorizer.fit_transform(X)
 
-X_train,X_test,y_train,y_test = train_test_split(X,y,test_size=0.2)
+# Split dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
+# Train model
 model = MultinomialNB()
-model.fit(X_train,y_train)
+model.fit(X_train, y_train)
 
+# Predictions
 pred = model.predict(X_test)
 
-print("Accuracy:",accuracy_score(y_test,pred))
+# Accuracy
+accuracy = accuracy_score(y_test, pred)
+print("Model Accuracy:", accuracy)
+
+# ---- Test with custom message ----
+print("\nTest the Spam Classifier")
+message = input("Enter a message: ")
+
+message_data = vectorizer.transform([message])
+prediction = model.predict(message_data)
+
+if prediction[0] == 1:
+    print("Prediction: Spam")
+else:
+    print("Prediction: Not Spam")
